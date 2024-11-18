@@ -1,0 +1,41 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "Summarization API"
+  description: "API to summarize articles using the facebook/bart-large-cnn model."
+host: "localhost:5000"
+basePath: "/"
+paths:
+  /summarize:
+    post:
+      summary: "Summarize an article"
+      description: "Generates a summary of the provided article text."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                article:
+                  type: "string"
+                  description: "The article to summarize."
+                  example: "Artificial Intelligence (AI) has rapidly evolved over the past few decades, revolutionizing industries, improving efficiency, and reshaping the way we interact with technology. From healthcare to education, finance, and entertainment, AI is playing an increasingly vital role in driving innovation.One of the most significant areas where AI is expected to make a profound impact is in the field of healthcare. AI-powered tools are already being used for diagnostics, personalized treatment plans, and drug discovery. In the future, AI could help doctors make more accurate diagnoses, predict disease outbreaks, and even improve mental health treatment by analyzing vast amounts of data.In the financial sector, AI is transforming the way we manage investments and track spending. With machine learning algorithms, AI can analyze vast amounts of data to detect patterns, predict market trends, and optimize portfolios. Additionally, AI is helping businesses automate repetitive tasks, enabling employees to focus on higher-level decision-making.Despite its promising potential, AI also presents significant challenges. The ethical implications of AI, such as bias in algorithms, privacy concerns, and job displacement, need to be addressed. Ensuring that AI systems are transparent, fair, and accountable is crucial as they become increasingly integrated into daily life.As AI continues to advance, its potential to reshape industries and improve lives is vast. However, careful consideration and regulation will be necessary to mitigate the risks associated with this powerful technology."
+      responses:
+        200:
+          description: "Summary generated successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: "string"
+                    description: "The generated summary."
+                  time_taken_seconds:
+                    type: "number"
+                    description: "Time taken to generate the summary in seconds."
+        400:
+          description: "Invalid input provided."
+        500:
+          description: "Server error occurred."
