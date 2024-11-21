@@ -1,15 +1,15 @@
-
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_swagger_ui import get_swaggerui_blueprint
-from transformers import pipeline
+from transformers import PreTrainedTokenizerFast, BartForConditionalGeneration
 import time
 
 app = Flask(__name__)
 CORS(app)
 
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-
+# Load tokenizer and model
+tokenizer = PreTrainedTokenizerFast.from_pretrained("ainize/bart-base-cnn")
+model = BartForConditionalGeneration.from_pretrained("ainize/bart-base-cnn")
 
 SWAGGER_URL = '/api-docs'
 API_URL = '/summaryswag.yaml'  # This must match the route serving the YAML file
@@ -27,10 +27,9 @@ def serve_swagger_yaml():
 @app.route('/summarize', methods=['POST'])
 def summarize():
     """
-    Endpoint to summarize an article.
+    Endpoint to summarize an article using BartForConditionalGeneration.
     """
     try:
-
         data = request.json
         article = data.get("article", "")
         article = article.replace('\n', ' ').replace('\t', ' ')
@@ -40,17 +39,28 @@ def summarize():
         # Optional parameters
         max_length = data.get("max_length", 130)
         min_length = data.get("min_length", 30)
-        do_sample = data.get("do_sample", False)
+        num_beams = data.get("num_beams", 4)
 
+        # Tokenize input
+        input_ids = tokenizer.encode(article, return_tensors="pt")
 
         start_time = time.time()
-        summary = summarizer(article, max_length=max_length, min_length=min_length, do_sample=do_sample)
+        # Generate summary
+        summary_ids = model.generate(
+            input_ids=input_ids,
+            bos_token_id=model.config.bos_token_id,
+            eos_token_id=model.config.eos_token_id,
+            length_penalty=2.0,
+            max_length=max_length,
+            min_length=min_length,
+            num_beams=num_beams,
+        )
+        summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
         end_time = time.time()
-
 
         time_taken = round(end_time - start_time, 2)
         return jsonify({
-            "summary": summary[0]['summary_text'],
+            "summary": summary,
             "time_taken_seconds": time_taken
         })
     except Exception as e:
